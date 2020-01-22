@@ -1,7 +1,7 @@
 import { PathFinderNode } from './PathFinderNode';
 import { PriorityQueue } from './PriorityQueue';
-import { Grid, MazeStrategy } from './Grid';
 import { Point } from './Point';
+import { Grid, MazeStrategy } from '../types';
 
 const Steps = {
   WithDiagonals: [

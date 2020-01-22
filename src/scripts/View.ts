@@ -1,19 +1,23 @@
+import { GameObject } from './objects';
 import { Size } from './utils';
+import { IView } from './types';
 
-class View {
-  protected running = false;
-  protected visuals = [];
-  public background = undefined;
+class View implements IView {
+  public running = false;
+  protected visuals: Array<GameObject> = [];
+  public background: HTMLImageElement = undefined;
   public showGrid = true;
-  protected mazeSize = new Size(25, 25);
+  public mazeSize = new Size(25, 25);
 
-  constructor(protected width = 300, protected height = 200) {}
+  constructor(public width = 300, public height = 200) {}
+
+  start() {}
 
   pause() {
     this.running = false;
   }
 
-  add(visual) {
+  add(visual: GameObject) {
     if (Array.isArray(visual)) {
       for (var i = 0, n = visual.length; i < n; ++i) {
         this.visuals.push(visual[i]);
@@ -25,7 +29,7 @@ class View {
     this.visuals.sort((a, b) => a.z - b.z);
   }
 
-  remove(visual) {
+  remove(visual: GameObject) {
     const index = this.visuals.indexOf(visual);
     this.visuals.splice(index, 1);
   }
@@ -35,9 +39,13 @@ class View {
     this.drawSpawn();
     this.drawHome();
 
-    if (this.showGrid) this.drawGrid();
+    if (this.showGrid) {
+      this.drawGrid();
+    }
 
-    for (var i = 0, n = this.visuals.length; i < n; ++i) this.drawVisual(this.visuals[i]);
+    for (var i = 0, n = this.visuals.length; i < n; ++i) {
+      this.drawVisual(this.visuals[i]);
+    }
   }
 
   drawBackground() {}
@@ -48,7 +56,7 @@ class View {
 
   drawSpawn() {}
 
-  drawVisual(element) {}
+  drawVisual(element: GameObject) {}
 }
 
 export class CanvasView extends View {
@@ -56,6 +64,12 @@ export class CanvasView extends View {
 
   constructor(element: HTMLCanvasElement) {
     super(element.width, element.height);
+    this.reconnect(element);
+  }
+
+  reconnect(element: HTMLCanvasElement) {
+    this.width = element.width;
+    this.height = element.height;
     this.context = element.getContext('2d');
   }
 
@@ -72,7 +86,7 @@ export class CanvasView extends View {
     window.requestAnimationFrame(render);
   }
 
-  drawVisual(element) {
+  drawVisual(element: GameObject) {
     const ctx = this.context;
     const visual = element.visual;
     const sx = visual.index * visual.width;

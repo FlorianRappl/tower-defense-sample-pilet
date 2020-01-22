@@ -1,15 +1,15 @@
 import { ResourceLoader } from './ResourceLoader';
 
-export class ImageLoader extends ResourceLoader {
-  constructor(target) {
+export class ImageLoader extends ResourceLoader<HTMLImageElement> {
+  constructor(target: Record<string, HTMLImageElement>) {
     super(target);
   }
 
-  loadResource(name, value) {
+  loadResource(name: string, value: string) {
     var img = document.createElement('img');
     img.addEventListener('error', () => this.error(name), false);
     img.addEventListener('load', () => this.progress(name), false);
     img.src = value;
-    super.loadResource(name, img);
+    super.includeResource(name, img);
   }
 }

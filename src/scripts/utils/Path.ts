@@ -1,11 +1,5 @@
 import { Point } from './Point';
-
-export const enum Direction {
-  right = 0,
-  top = 1,
-  left = 2,
-  bottom = 3,
-}
+import { Direction } from '../types';
 
 export class Path {
   constructor(private list: Array<Point>) {}

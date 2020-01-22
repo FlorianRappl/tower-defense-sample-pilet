@@ -1,4 +1,3 @@
-export * from './Grid';
 export * from './Maze';
 export * from './Path';
 export * from './PathFinder';

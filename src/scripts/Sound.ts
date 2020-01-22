@@ -28,6 +28,12 @@ export class Sound {
     }
   }
 
+  pause() {
+    if (this.element) {
+      this.element.pause();
+    }
+  }
+
   play() {
     if (this.element || Sound.active > Sound.channels) {
       return;
@@ -54,6 +60,7 @@ export class Sound {
       this.element.play();
     }
   }
+
   static createAudio(src: string) {
     let deposit: Deposit;
     Sound.active++;

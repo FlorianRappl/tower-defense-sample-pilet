@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Game } from './scripts/Game';
 
 let game: Game = undefined;
 
@@ -7,11 +8,12 @@ const TowerDefense: React.FC = () => {
 
   React.useEffect(() => {
     if (!game) {
-      game = new Game();
+      game = new Game(host.current);
+    } else {
+      game.connect(host.current);
     }
 
-    game.init(host.current);
-    game.resume();
+    game.continue();
     return () => game.pause();
   }, []);
 

@@ -1,39 +1,46 @@
 export class Base {
-	constructor() {
-		this.events = {};
+  events: Record<string, Array<Function>> = {};
+
+  registerEvent(event: string) {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
   }
 
-	registerEvent(event) {
-		if (!this.events[event])
-			this.events[event] = [];
+  unregisterEvent(event: string) {
+    if (this.events[event]) {
+      delete this.events[event];
+    }
   }
 
-	unregisterEvent(event) {
-		if (this.events[event])
-			delete this.events[event];
+  triggerEvent(event: string, args: any = {}) {
+    const events = this.events[event];
+
+    if (events) {
+      for (let i = events.length; i--; ) {
+        events[i].call(this, args);
+      }
+    }
   }
 
-	triggerEvent(event, args) {
-		if (this.events[event]) {
-			var e = this.events[event];
+  addEventListener(event: string, handler: Function) {
+    const events = this.events[event];
 
-			for (var i = e.length; i--; )
-				e[i].apply(this, [args || {}]);
-		}
+    if (events && handler && typeof handler === 'function') {
+      events.push(handler);
+    }
   }
 
-	addEventListener(event, handler) {
-		if (this.events[event] && handler && typeof(handler) === 'function')
-			this.events[event].push(handler);
-  }
+  removeEventListener(event: string, handler?: Function) {
+    const events = this.events[event];
 
-	removeEventListener(event, handler) {
-		if (this.events[event]) {
-			if (handler && typeof(handler) === 'function') {
-				var index = this.events[event].indexOf(handler);
-				this.events[event].splice(index, 1);
-			} else
-				this.events[event].splice(0, this.events[event].length);
-		}
-	}
+    if (events) {
+      if (handler && typeof handler === 'function') {
+        const index = events.indexOf(handler);
+        events.splice(index, 1);
+      } else {
+        events.splice(0, events.length);
+      }
+    }
+  }
 }

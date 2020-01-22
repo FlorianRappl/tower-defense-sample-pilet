@@ -1,15 +1,17 @@
-var FireWizzrobe = Unit.extend({
-	init: function() {
-		this._super(FireWizzrobe.speed, 70, MazeStrategy.manhattan, FireWizzrobe.hitpoints);
-		this.createVisual(FireWizzrobe.sprite, [3, 3, 3, 3], 1.4);
-	},
-}, function(wizz) {
-	wizz.speed = 3.0;
-	wizz.frames = 12;
-	wizz.hitpoints = 30;
-	wizz.description = 'The wizard with the fire robe is quite fast, but does not take very much.';
-	wizz.nickName = 'Wizzrobe';
-	wizz.sprite = 'firewizzrobe';
-	wizz.rating = wizz.speed * wizz.hitpoints;
-	types.units['FireWizzrobe'] = wizz;
-});
+import { Unit } from '../objects/Unit';
+import { MazeStrategy } from '../types';
+
+export class FireWizzrobe extends Unit {
+  static speed = 3.0;
+  static frames = 12;
+  static hitpoints = 30;
+  static description = 'The wizard with the fire robe is quite fast, but does not take very much.';
+  static nickName = 'Wizzrobe';
+  static sprite = 'firewizzrobe';
+  static rating = FireWizzrobe.speed * FireWizzrobe.hitpoints;
+
+  constructor() {
+    super(FireWizzrobe.speed, 70, MazeStrategy.manhattan, FireWizzrobe.hitpoints);
+    this.createVisual(FireWizzrobe.sprite, [3, 3, 3, 3], 1.4);
+  }
+}

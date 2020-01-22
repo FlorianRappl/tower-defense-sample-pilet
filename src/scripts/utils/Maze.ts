@@ -1,7 +1,7 @@
 import { PathFinder } from './PathFinder';
-import { Grid, MazeStrategy } from './Grid';
 import { Size } from './Size';
 import { Point } from './Point';
+import { Grid, MazeStrategy } from '../types';
 
 export class Maze {
   private grid: Grid;
@@ -9,9 +9,9 @@ export class Maze {
   private paths = {};
 
   constructor(
-    private size: Size,
-    private start = new Point(0, ~~(size.height * 0.5)),
-    private end = new Point(size.width, ~~(size.height * 0.5)),
+    public size: Size,
+    public start = new Point(0, ~~(size.height * 0.5)),
+    public end = new Point(size.width, ~~(size.height * 0.5)),
   ) {
     const grid: Grid = [];
 

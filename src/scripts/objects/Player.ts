@@ -1,23 +1,25 @@
 import { Base } from './Base';
+import { Unit } from './Unit';
+import { events } from '../manifest';
 
 export class Player extends Base {
-  constructor(name) {
+  public money = 0;
+  public points = 0;
+  public hitpoints = 0;
+
+  constructor(public name = 'Player') {
     super();
-    this.name = name || 'Player';
-    this.money = 0;
-    this.points = 0;
-    this.hitpoints = 0;
     this.registerEvent(events.playerDefeated);
     this.registerEvent(events.moneyChanged);
     this.registerEvent(events.healthChanged);
   }
 
-  setMoney(value) {
+  setMoney(value: number) {
     this.money = value;
     this.triggerEvent(events.moneyChanged, this);
   }
 
-  addMoney(value) {
+  addMoney(value: number) {
     this.points += Math.max(0, value);
     this.setMoney(this.money + value);
   }
@@ -26,7 +28,7 @@ export class Player extends Base {
     return this.money;
   }
 
-  setHitpoints(value) {
+  setHitpoints(value: number) {
     this.hitpoints = Math.max(0, value);
     this.triggerEvent(events.healthChanged, this);
 
@@ -35,7 +37,7 @@ export class Player extends Base {
     }
   }
 
-  addHitpoints(value) {
+  addHitpoints(value: number) {
     this.setHitpoints(this.hitpoints + value);
   }
 
@@ -43,7 +45,7 @@ export class Player extends Base {
     return this.hitpoints;
   }
 
-  hit(unit) {
+  hit(unit: Unit) {
     this.setHitpoints(this.hitpoints - unit.damage);
   }
 }

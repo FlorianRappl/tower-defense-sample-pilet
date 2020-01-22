@@ -1,12 +1,17 @@
 import { ResourceLoader } from './ResourceLoader';
 
-export class SoundLoader extends ResourceLoader {
-  constructor(target) {
+export interface SoundDef {
+  ogg: string;
+  mp3: string;
+}
+
+export class SoundLoader extends ResourceLoader<HTMLAudioElement> {
+  constructor(target: Record<string, HTMLAudioElement>) {
     super(target);
   }
 
-  loadResource(name, value) {
-    var element = document.createElement('audio');
+  loadResource(name: string, value: SoundDef) {
+    const element = document.createElement('audio');
     element.addEventListener('loadedmetadata', () => this.progress(name), false);
     element.addEventListener('error', () => this.error(name), false);
 
@@ -18,6 +23,6 @@ export class SoundLoader extends ResourceLoader {
       return this.progress(name);
     }
 
-    super.loadResource(name, element);
+    super.includeResource(name, element);
   }
 }

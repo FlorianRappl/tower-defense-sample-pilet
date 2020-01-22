@@ -10,6 +10,9 @@ export const constants = {
   towerBuildNumber: 4,
 };
 
+export const images: Record<string, HTMLImageElement> = {};
+export const sounds: Record<string, HTMLAudioElement> = {};
+
 export const events = {
   click: 'click',
   mousemove: 'mousemove',
@@ -19,6 +22,7 @@ export const events = {
   died: 'died',
   shot: 'shot',
   hit: 'hit',
+  refreshed: 'refreshed',
   accomplished: 'accomplished',
   playerDefeated: 'playerDefeated',
   moneyChanged: 'moneyChanged',

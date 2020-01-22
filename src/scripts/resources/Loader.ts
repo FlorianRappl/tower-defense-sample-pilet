@@ -1,47 +1,52 @@
-var Loader = Class.extend({
-	init: function(completed, progress, error) {
-		this.completed = completed || function() {};
-		this.progress = progress || function() {};
-		this.error = error || function() {};
-		this.sets = [];
-	},
-	set: function(name, loader, target, keys) {
-		this.sets.push({
-			name: name,
-			resources : keys,
-			loader : new loader(target),
-		});
-	},
-	start: function() {
-		this.next();
-	},
-	next: function() {
-		var me = this;
-		var set = me.sets.pop();
+import { ResourceLoader } from './ResourceLoader';
 
-		var completed = function(e) {
-			me.next();
-		};
-		var progress = function(e) {
-			e.name = set.name;
-			me.progress(e);
-		};
-		var error = function(e) {
-			e.name = set.name;
-			me.error(e);
-		};
+export interface LoaderSet {
+  name: string;
+  resources: any;
+  loader: ResourceLoader<any>;
+}
 
-		if (set) {
-			me.progress({
-				name : set.name,
-				recent : '',
-				total : set.resources.length,
-				progress: 0,
-			});
-			set.loader.load(set.resources, completed, progress, error);
-			return;
-		}
+export class Loader {
+  private sets: Array<LoaderSet> = [];
 
-		me.completed();
-	}
-});
+  constructor(private completed = () => {}, private progress = (e: any) => {}, private error = (e: any) => {}) {}
+
+  set(name: string, loader: ResourceLoader<any>, resources) {
+    this.sets.push({
+      name,
+      resources,
+      loader,
+    });
+  }
+
+  start() {
+    this.next();
+  }
+
+  next() {
+    const set = this.sets.pop();
+
+    const completed = e => this.next();
+    const progress = e => {
+      e.name = set.name;
+      this.progress(e);
+    };
+    const error = e => {
+      e.name = set.name;
+      this.error(e);
+    };
+
+    if (set) {
+      this.progress({
+        name: set.name,
+        recent: '',
+        total: set.resources.length,
+        progress: 0,
+      });
+      set.loader.load(set.resources, completed, progress, error);
+      return;
+    }
+
+    this.completed();
+  }
+}

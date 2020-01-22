@@ -1,18 +1,20 @@
-var IceTower = Tower.extend({
-	init: function() {
-		this._super(IceTower.speed, 200, IceTower.range, IceTower.shotType);
-		this.typeName = 'IceTower';
-		this.createVisual(IceTower.sprite, [1, 1, 1, 1]);
-	},
-}, function(ice) {
-	ice.description = 'Cool. Slow shots, but with high efficiency. The right choice against slow strongly armored units.';
-	ice.nickName = 'Ice-Tower';
-	ice.sprite = 'icetower';
-	ice.frames = 4;
-	ice.shotType = IceShot;
-	ice.speed = 2.0;
-	ice.range = 6.0;
-	ice.rating = ice.speed * Math.log(ice.range + 1.0) * ice.shotType.rating;
-	ice.cost = 9;
-	types.towers['IceTower'] = ice;
-});
+import { Tower } from '../objects/Tower';
+import { IceShot } from '../shots/IceShot';
+
+export class IceTower extends Tower {
+  static description =
+    'Cool. Slow shots, but with high efficiency. The right choice against slow strongly armored units.';
+  static nickName = 'Ice-Tower';
+  static sprite = 'icetower';
+  static frames = 4;
+  static shotType = IceShot;
+  static speed = 2.0;
+  static range = 6.0;
+  static cost = 9;
+  static rating = IceTower.speed * Math.log(IceTower.range + 1.0) * IceTower.shotType.rating;
+
+  constructor() {
+    super('IceTower', IceTower.speed, 200, IceTower.range, IceTower.shotType);
+    this.createVisual(IceTower.sprite, [1, 1, 1, 1]);
+  }
+}

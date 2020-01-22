@@ -1,15 +1,17 @@
-var Mario = Unit.extend({
-	init: function() {
-		this._super(Mario.speed, 100, MazeStrategy.manhattan, Mario.hitpoints);
-		this.createVisual(Mario.sprite, [8, 8, 8, 8]);
-	},
-}, function(enemy) {
-	enemy.speed = 2.0;
-	enemy.frames = 32;
-	enemy.hitpoints = 10;
-	enemy.description = 'You have to be careful with that plumber.';
-	enemy.nickName = 'Mario';
-	enemy.sprite = 'mario';
-	enemy.rating = enemy.speed * enemy.hitpoints;
-	types.units['Mario'] = enemy;
-});
+import { Unit } from '../objects/Unit';
+import { MazeStrategy } from '../types';
+
+export class Mario extends Unit {
+  static speed = 2.0;
+  static frames = 32;
+  static hitpoints = 10;
+  static description = 'You have to be careful with that plumber.';
+  static nickName = 'Mario';
+  static sprite = 'mario';
+  static rating = Mario.speed * Mario.hitpoints;
+
+  constructor() {
+    super(Mario.speed, 100, MazeStrategy.manhattan, Mario.hitpoints);
+    this.createVisual(Mario.sprite, [8, 8, 8, 8]);
+  }
+}

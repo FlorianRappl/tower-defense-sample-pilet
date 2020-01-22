@@ -80,7 +80,9 @@ export class PriorityQueue {
       }
     }
 
-    if (p < i) return;
+    if (p < i) {
+      return;
+    }
 
     do {
       const pn = p;

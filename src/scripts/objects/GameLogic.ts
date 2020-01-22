@@ -1,56 +1,65 @@
+import * as towers from '../towers';
 import { Base } from './Base';
-import { Size, Maze } from '../utils';
-import { WaveList } from './WaveList';
 import { Wave } from './Wave';
+import { WaveList } from './WaveList';
+import { GameObject } from './GameObject';
+import { Player } from './Player';
+import { Tower } from './Tower';
+import { Shot } from './Shot';
+import { Unit } from './Unit';
+import { Size, Maze, Point, Path } from '../utils';
+import { constants, events } from '../manifest';
+import { GameState, IView } from '../types';
 
 export class GameLogic extends Base {
-  constructor(view, mazeWidth, mazeHeight) {
+  private gameLoop: any;
+
+  public mediPackCost = constants.mediPackCost;
+  public mediPackFactor = constants.mediPackFactor;
+  public towerBuildCost = constants.towerBuildCost;
+  public towerBuildFactor = constants.towerBuildFactor;
+  public maxTowerNumber = constants.towerBuildNumber;
+  public mediPackHealth = constants.mediPackHealth;
+  public waves = new WaveList();
+  public currentWave = new Wave();
+  public player = new Player();
+  public state = GameState.unstarted;
+  public maze: Maze;
+  public towers: Array<Tower> = [];
+  public units: Array<Unit> = [];
+  public shots: Array<Shot> = [];
+  private view: IView;
+
+  constructor(view: IView, mazeWidth = 20, mazeHeight = 11) {
     super();
-    const me = this;
+    this.maze = new Maze(new Size(mazeWidth, mazeHeight));
+    view.mazeSize = this.getMazeSize();
+    this.view = view;
 
-    me.towers = [];
-    me.units = [];
-    me.shots = [];
-
-    me.mediPackCost = constants.mediPackCost;
-    me.mediPackFactor = constants.mediPackFactor;
-    me.towerBuildCost = constants.towerBuildCost;
-    me.towerBuildFactor = constants.towerBuildFactor;
-    me.maxTowerNumber = constants.towerBuildNumber;
-    me.mediPackHealth = constants.mediPackHealth;
-
-    me.view = view;
-    me.player = new Player();
-    me.state = GameState.unstarted;
-    me.maze = new Maze(new Size(mazeWidth || 20, mazeHeight || 11));
-    me.view.mazeSize = me.getMazeSize();
-    me.waves = new WaveList();
-    me.currentWave = new Wave();
-
-    me.player.addEventListener(events.playerDefeated, e => {
-      me.triggerEvent(events.playerDefeated, e);
-      me.finish();
+    this.player.addEventListener(events.playerDefeated, e => {
+      this.triggerEvent(events.playerDefeated, e);
+      this.finish();
     });
 
-    me.player.addEventListener(events.moneyChanged, e => {
-      me.triggerEvent(events.moneyChanged, e);
+    this.player.addEventListener(events.moneyChanged, e => {
+      this.triggerEvent(events.moneyChanged, e);
     });
 
-    me.player.addEventListener(events.healthChanged, e => {
-      me.triggerEvent(events.healthChanged, e);
+    this.player.addEventListener(events.healthChanged, e => {
+      this.triggerEvent(events.healthChanged, e);
     });
 
-    me.registerEvent(events.refreshed);
-    me.registerEvent(events.waveDefeated);
-    me.registerEvent(events.waveFinished);
-    me.registerEvent(events.playerDefeated);
-    me.registerEvent(events.moneyChanged);
-    me.registerEvent(events.healthChanged);
-    me.registerEvent(events.waveCreated);
-    me.registerEvent(events.unitSpawned);
-    me.registerEvent(events.towerNumberChanged);
-    me.registerEvent(events.towerBuildCostChanged);
-    me.registerEvent(events.mediPackCostChanged);
+    this.registerEvent(events.refreshed);
+    this.registerEvent(events.waveDefeated);
+    this.registerEvent(events.waveFinished);
+    this.registerEvent(events.playerDefeated);
+    this.registerEvent(events.moneyChanged);
+    this.registerEvent(events.healthChanged);
+    this.registerEvent(events.waveCreated);
+    this.registerEvent(events.unitSpawned);
+    this.registerEvent(events.towerNumberChanged);
+    this.registerEvent(events.towerBuildCostChanged);
+    this.registerEvent(events.mediPackCostChanged);
   }
 
   start() {
@@ -69,11 +78,8 @@ export class GameLogic extends Base {
 
   restart() {
     if (!this.gameLoop) {
-      var me = this;
       this.view.start();
-      this.gameLoop = setInterval(function() {
-        me.tick();
-      }, constants.ticks);
+      this.gameLoop = setInterval(() => this.tick(), constants.ticks);
     }
   }
 
@@ -86,15 +92,10 @@ export class GameLogic extends Base {
   }
 
   saveState() {
-    var towers = [];
-
-    for (var i = 0; i < this.towers.length; i++) {
-      var tower = this.towers[i];
-      towers.push({
-        point: { x: tower.mazeCoordinates.x, y: tower.mazeCoordinates.y },
-        type: tower.typeName,
-      });
-    }
+    const towers = this.towers.map(tower => ({
+      point: { x: tower.mazeCoordinates.x, y: tower.mazeCoordinates.y },
+      type: tower.typeName,
+    }));
 
     return {
       mediPackCost: this.mediPackCost,
@@ -112,14 +113,14 @@ export class GameLogic extends Base {
     };
   }
 
-  loadState(state) {
+  loadState(state: any) {
     this.towers = [];
 
-    for (var i = 0; i < state.towers.length; i++) {
-      var type = types.towers[state.towers[i].type];
-      var tower = new type();
-      var point = state.towers[i].point;
-      var pt = new Point(point.x, point.y);
+    for (let i = 0; i < state.towers.length; i++) {
+      const type = towers[state.towers[i].type];
+      const tower = new type();
+      const point = state.towers[i].point;
+      const pt = new Point(point.x, point.y);
 
       if (this.maze.tryBuild(pt, tower.mazeWeight)) {
         tower.mazeCoordinates = pt;
@@ -141,8 +142,10 @@ export class GameLogic extends Base {
     this.state = state.state;
   }
 
-  update(objects) {
-    for (var i = objects.length; i--; ) objects[i].update();
+  update(objects: Array<GameObject>) {
+    for (var i = objects.length; i--; ) {
+      objects[i].update();
+    }
   }
 
   tick() {
@@ -156,11 +159,11 @@ export class GameLogic extends Base {
       this.update(this.shots);
       this.update(this.units);
       this.removeDeadObjects();
-      var newUnits = this.currentWave.update();
+      const newUnits = this.currentWave.update();
 
       for (var i = newUnits.length; i--; ) {
-        var unit = newUnits[i];
-        var path = this.maze.getPath(unit.strategy);
+        const unit = newUnits[i];
+        const path = this.maze.getPath(unit.mazeStrategy);
         unit.mazeCoordinates = this.maze.start;
         unit.path = new Path(path);
         this.addUnit(unit);
@@ -172,52 +175,46 @@ export class GameLogic extends Base {
     this.state = GameState.finished;
   }
 
-  getViewSize() {
-    return this.view.getSize();
-  }
-
   getNumShooting() {
-    return this.towers.filter(tower => tower instanceof Rock === false).length;
+    return this.towers.filter(tower => tower.typeName !== 'Rock').length;
   }
 
   getMazeSize() {
-    return this.maze.gridDim;
+    return this.maze.size;
   }
 
-  transformCoordinates(screenX, screenY) {
-    var x = (screenX * this.maze.gridDim.width) / this.view.width;
-    var y = (screenY * this.maze.gridDim.height) / this.view.height;
+  transformCoordinates(screenX: number, screenY: number) {
+    var x = (screenX * this.maze.size.width) / this.view.width;
+    var y = (screenY * this.maze.size.height) / this.view.height;
     return new Point(~~x, ~~y);
   }
 
-  removeTower(tower) {
+  removeTower(tower: Tower) {
     tower.removeEventListener(events.shot);
     this.towers.splice(this.towers.indexOf(tower), 1);
     this.view.remove(tower);
   }
 
-  addTower(tower) {
-    var me = this;
-    tower.targets = me.units;
-    tower.addEventListener(events.shot, shot => me.addShot(shot));
-    me.towers.push(tower);
-    me.view.add(tower);
+  addTower(tower: Tower) {
+    tower.targets = this.units;
+    tower.addEventListener(events.shot, shot => this.addShot(shot));
+    this.towers.push(tower);
+    this.view.add(tower);
   }
 
-  addShot(shot) {
+  addShot(shot: Shot) {
     this.shots.push(shot);
     this.view.add(shot);
   }
 
-  addUnit(unit) {
-    var me = this;
-    unit.addEventListener(events.accomplished, unt => me.player.hit(unt));
+  addUnit(unit: Unit) {
+    unit.addEventListener(events.accomplished, unt => this.player.hit(unt));
     unit.playInitSound();
-    me.units.push(unit);
-    me.view.add(unit);
+    this.units.push(unit);
+    this.view.add(unit);
   }
 
-  removeDead(objects) {
+  removeDead(objects: Array<GameObject>) {
     for (let i = objects.length; i--; ) {
       if (objects[i].dead) {
         this.view.remove(objects[i]);
@@ -240,7 +237,7 @@ export class GameLogic extends Base {
     this.player.addMoney(this.currentWave.prizeMoney);
     this.state = GameState.building;
 
-    for (var i = this.shots.length; i--; ) {
+    for (let i = this.shots.length; i--; ) {
       this.view.remove(this.shots[i]);
       this.shots.splice(i, 1);
     }
@@ -250,26 +247,25 @@ export class GameLogic extends Base {
 
   beginWave() {
     if (this.state === GameState.building) {
-      var me = this;
-      me.state = GameState.waving;
-      var wave = me.waves.next();
+      this.state = GameState.waving;
+      const wave = this.waves.next();
       wave.addEventListener(events.waveFinished, () => {
-        me.triggerEvent(events.waveFinished);
+        this.triggerEvent(events.waveFinished);
         wave.removeEventListener(events.waveFinished);
         wave.removeEventListener(events.unitSpawned);
       });
       wave.addEventListener(events.unitSpawned, e => {
-        me.triggerEvent(events.unitSpawned, e);
+        this.triggerEvent(events.unitSpawned, e);
       });
-      me.triggerEvent(events.waveCreated, wave);
-      me.currentWave = wave;
+      this.triggerEvent(events.waveCreated, wave);
+      this.currentWave = wave;
     }
   }
 
-  buildTower(pt, type) {
-    var newTower = new type();
-    var isrock = newTower instanceof Rock;
-    var numShooting = this.getNumShooting();
+  buildTower(pt: Point, type: any) {
+    const newTower = new type();
+    const isrock = newTower.typeName === 'Rock';
+    const numShooting = this.getNumShooting();
 
     if (
       this.state === GameState.building &&
@@ -297,18 +293,17 @@ export class GameLogic extends Base {
     return false;
   }
 
-  destroyTower(pt) {
+  destroyTower(pt: Point) {
     if (this.state == GameState.building) {
-      var towerToRemove = this.towers.filter(function(t) {
-        return t.mazeCoordinates.x === pt.x && t.mazeCoordinates.y === pt.y;
-      })[0];
+      const [towerToRemove] = this.towers.filter(t => t.mazeCoordinates.x === pt.x && t.mazeCoordinates.y === pt.y);
 
       if (towerToRemove) {
-        this.player.addMoney(0.5 * towerToRemove.cost);
+        const cost = towers[towerToRemove.typeName].cost;
+        this.player.addMoney(0.5 * cost);
         this.removeTower(towerToRemove);
         this.maze.tryRemove(pt);
 
-        if (!(towerToRemove instanceof Rock)) {
+        if (towerToRemove.typeName !== 'Rock') {
           this.triggerEvent(events.towerNumberChanged, {
             current: this.getNumShooting(),
             maximum: this.maxTowerNumber,
@@ -319,7 +314,7 @@ export class GameLogic extends Base {
   }
 
   buyMediPack() {
-    var cost = this.mediPackCost;
+    const cost = this.mediPackCost;
 
     if (this.player.money >= cost) {
       this.player.addHitpoints(this.mediPackHealth);
@@ -332,7 +327,7 @@ export class GameLogic extends Base {
   }
 
   buyTowerBuildRight() {
-    var cost = this.towerBuildCost;
+    const cost = this.towerBuildCost;
 
     if (this.player.money >= cost) {
       this.setMaxTowerNumber(this.maxTowerNumber + 1);
@@ -344,23 +339,23 @@ export class GameLogic extends Base {
     return false;
   }
 
-  setMediPackCost(cost) {
+  setMediPackCost(cost: number) {
     this.mediPackCost = cost;
     this.triggerEvent(events.mediPackCostChanged, cost);
   }
 
-  setTowerBuildCost(cost) {
+  setTowerBuildCost(cost: number) {
     this.towerBuildCost = cost;
     this.triggerEvent(events.towerBuildCostChanged, cost);
   }
 
-  setMaxTowerNumber(number) {
-    var numShooting = this.getNumShooting();
-    this.maxTowerNumber = number;
+  setMaxTowerNumber(value: number) {
+    const numShooting = this.getNumShooting();
+    this.maxTowerNumber = value;
 
     this.triggerEvent(events.towerNumberChanged, {
       current: numShooting,
-      maximum: number,
+      maximum: value,
     });
   }
 }
