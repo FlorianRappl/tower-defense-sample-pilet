@@ -2,9 +2,10 @@ import * as units from './units';
 import * as towers from './towers';
 import { Sound } from './Sound';
 import { CanvasView } from './View';
-import { GameLogic } from './objects';
+import { GameLogic, Wave } from './objects';
 import { events, resources, images, sounds } from './manifest';
 import { Loader, ImageLoader, SoundLoader } from './resources';
+import { ProgressEventData, GameState } from './types';
 
 export class Game {
   private logic: GameLogic;
@@ -74,7 +75,7 @@ export class Game {
     this.view.reconnect(this.canvas);
   }
 
-  private getMousePosition = evt => {
+  private getMousePosition = (evt: MouseEvent) => {
     const rect = this.canvas.getBoundingClientRect();
     return {
       x: evt.clientX - rect.left,
@@ -112,23 +113,11 @@ export class Game {
       );
       div.appendChild(icon);
       const info = document.createElement('div');
-      info.innerHTML = [
-        '<div class=title>',
-        unit.nickName,
-        '</div>',
-        '<div class=description>',
-        unit.description,
-        '</div>',
-        '<div class=rating>',
-        ~~unit.rating,
-        '</div>',
-        '<div class=speed>',
-        unit.speed,
-        '</div>',
-        '<div class=damage>',
-        unit.hitpoints,
-        '</div><div style="clear:both"></div>',
-      ].join('');
+      info.innerHTML = `<div class=title>${unit.nickName}</div><div class=description>${
+        unit.description
+      }</div><div class=rating>${~~unit.rating}</div><div class=speed>${unit.speed}</div><div class=damage>${
+        unit.hitpoints
+      }</div><div style="clear:both"></div>`;
       info.classList.add('info');
       div.appendChild(info);
       this.nextwave.appendChild(div);
@@ -192,24 +181,26 @@ export class Game {
     this.updateNextWave();
   };
 
+  private onWaveCreated = () => {
+    const { currentWave } = this.logic;
+    this.timeInfo.textContent = `${currentWave.units.length} units remaining`;
+    this.startWaveButton.querySelector('span').textContent = `${currentWave.index + 1}`;
+    this.startWaveButton.disabled = true;
+    delete localStorage.towerDefense;
+  };
+
+  private onUnitSpawned = (remaining: number) => {
+    this.timeInfo.textContent = `${remaining} units remaining`;
+  };
+
   private onPlayerDefeated = () => {
     this.timeInfo.textContent = 'Game over ...';
     alert('You lost! Press refresh for a restart.');
   };
 
-  private onWaveCreated = wave => {
-    this.timeInfo.textContent = wave.units.length + ' units remaining';
-    this.startWaveButton.querySelector('span').textContent = wave.index + 1;
-    this.startWaveButton.disabled = true;
-    delete localStorage.towerDefense;
-  };
-
-  private onUnitSpawned = remaining => {
-    this.timeInfo.textContent = remaining + ' units remaining';
-  };
-
-  private onMoneyChanged = player => {
-    this.moneyInfo.textContent = player.money;
+  private onMoneyChanged = () => {
+    const { player } = this.logic;
+    this.moneyInfo.textContent = `${player.money}`;
     this.buyMedipackButton.disabled = player.money < this.logic.mediPackCost;
     this.buyTowerbuildButton.disabled = player.money < this.logic.towerBuildCost;
 
@@ -218,20 +209,23 @@ export class Game {
     }
   };
 
-  private onHealthChanged = player => {
-    this.healthInfo.textContent = player.hitpoints;
+  private onHealthChanged = () => {
+    const { player } = this.logic;
+    this.healthInfo.textContent = `${player.hitpoints}`;
   };
 
-  private onTowerBuildCostChanged = cost => {
-    this.buyTowerbuildButton.querySelector('span').textContent = cost;
+  private onTowerBuildCostChanged = () => {
+    this.buyTowerbuildButton.querySelector('span').textContent = `${this.logic.towerBuildCost}`;
   };
 
-  private onMediPackCostChanged = cost => {
-    this.buyMedipackButton.querySelector('span').textContent = cost;
+  private onMediPackCostChanged = () => {
+    this.buyMedipackButton.querySelector('span').textContent = `${this.logic.mediPackCost}`;
   };
 
-  private onTowerNumberChanged = info => {
-    this.towerInfo.textContent = info.current + ' / ' + info.maximum;
+  private onTowerNumberChanged = () => {
+    const current = this.logic.getNumShooting();
+    const maximum = this.logic.maxTowerNumber;
+    this.towerInfo.textContent = `${current} / ${maximum}`;
   };
 
   private onStartWave = () => {
@@ -252,10 +246,15 @@ export class Game {
     const status = this.soundInfo.classList.contains('on');
     this.soundInfo.classList.remove(status ? on : off);
     this.soundInfo.classList.add(status ? off : on);
-    Sound.setVolume(status ? 0 : 1);
+
+    if (status) {
+      Sound.disable();
+    } else {
+      Sound.enable();
+    }
   };
 
-  private onCanvasLeftClick = evt => {
+  private onCanvasLeftClick = (evt: MouseEvent) => {
     const mousePos = this.getMousePosition(evt);
     const pos = this.logic.transformCoordinates(mousePos.x, mousePos.y);
     evt.preventDefault();
@@ -267,18 +266,18 @@ export class Game {
     }
   };
 
-  private onCanvasRightClick = evt => {
+  private onCanvasRightClick = (evt: MouseEvent) => {
     const mousePos = this.getMousePosition(evt);
     const pos = this.logic.transformCoordinates(mousePos.x, mousePos.y);
     evt.preventDefault();
     this.logic.destroyTower(pos);
   };
 
-  private onCanvasMouseOver = evt => {
+  private onCanvasMouseOver = () => {
     this.view.showGrid = true;
   };
 
-  private onCanvasMouseOut = evt => {
+  private onCanvasMouseOut = () => {
     this.view.showGrid = false;
   };
 
@@ -286,40 +285,22 @@ export class Game {
     const { towerButtons, towerPanel } = this;
     const img = images[tower.sprite];
     const div = document.createElement('button');
-    div.innerHTML = [
-      '<div class=preview><div style="background: url(',
-      img.src,
-      ') no-repeat; width: ',
-      ~~(img.naturalWidth / tower.frames),
-      'px; height: ',
-      img.naturalHeight,
-      'px" class="preview-image"></div></div>',
-      '<div class=title>',
-      tower.nickName,
-      '</div><div class=info>',
-      '<div class=description>',
-      tower.description,
-      '</div>',
-      '<div class=rating>',
-      ~~tower.rating,
-      '</div>',
-      '<div class=speed>',
-      tower.speed,
-      '</div>',
-      '<div class=damage>',
-      tower.shotType.damage,
-      '</div>',
-      '<div class=range>',
-      tower.range,
-      '</div>',
-      '<div class=cost>',
-      tower.cost,
-      '</div></div>',
-    ].join('');
+
+    div.innerHTML = `<div class=preview><div style="background: url(${img.src}) no-repeat; width: ${~~(
+      img.naturalWidth / tower.frames
+    )}px; height: ${img.naturalHeight}px" class="preview-image"></div></div><div class=title>${
+      tower.nickName
+    }</div><div class=info><div class=description>${
+      tower.description
+    }</div><div class=rating>${~~tower.rating}</div><div class=speed>${tower.speed}</div><div class=damage>${
+      tower.shotType.damage
+    }</div><div class=range>${tower.range}</div><div class=cost>${tower.cost}</div></div>`;
+
     towerButtons.push({
       tower: tower,
       element: div,
     });
+
     div.addEventListener(events.click, () => {
       this.towerType = tower;
 
@@ -329,6 +310,7 @@ export class Game {
 
       div.classList.add('selected-tower');
     });
+
     towerPanel.appendChild(div);
   };
 
@@ -346,18 +328,26 @@ export class Game {
   };
 
   private setupElements() {
-    const { buyMedipackButton, buyTowerbuildButton, logic, frame, wait, towerButtons } = this;
+    const { frame, wait, towerButtons } = this;
     towerButtons.splice(0, towerButtons.length);
 
     for (const key in towers) {
       this.addTower(towers[key]);
     }
 
-    buyMedipackButton.querySelector('span').textContent = logic.mediPackCost.toString();
-    buyTowerbuildButton.querySelector('span').textContent = logic.towerBuildCost.toString();
+    this.onMediPackCostChanged();
+    this.onTowerBuildCostChanged();
+    this.onTowerNumberChanged();
+    this.onHealthChanged();
+    this.onMoneyChanged();
+    this.addHandlers();
+
+    if (this.logic.state === GameState.waving) {
+      this.onWaveCreated();
+    }
+
     frame.classList.remove('hidden');
     wait.classList.add('hidden');
-    this.addHandlers();
   }
 
   private completed = () => {
@@ -389,7 +379,7 @@ export class Game {
     this.updateNextWave();
   };
 
-  private progress = e => {
+  private progress = (e: ProgressEventData) => {
     const text = `Loading (${e.name}, ${~~(e.progress * 100)}% of ${e.total})`;
     this.waitMessage.textContent = text;
   };

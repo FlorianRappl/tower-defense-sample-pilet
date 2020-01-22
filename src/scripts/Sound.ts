@@ -39,18 +39,19 @@ export class Sound {
       return;
     }
 
-    const me = this;
     this.element = Sound.createAudio(this.source);
     this.setVolume(this.volume);
 
-    const ended = function() {
-      if (me.loop) {
-        this.currentTime = 0;
-        this.play();
+    const ended = () => {
+      const el = this.element;
+
+      if (el.loop) {
+        el.currentTime = 0;
+        el.play();
       } else {
-        me.element = undefined;
-        this.removeEventListener('ended', ended);
-        Sound.destroyAudio(this);
+        this.element = undefined;
+        el.removeEventListener('ended', ended);
+        Sound.destroyAudio(el);
       }
     };
 

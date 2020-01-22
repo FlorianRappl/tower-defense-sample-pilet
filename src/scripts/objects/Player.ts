@@ -16,7 +16,7 @@ export class Player extends Base {
 
   setMoney(value: number) {
     this.money = value;
-    this.triggerEvent(events.moneyChanged, this);
+    this.triggerEvent(events.moneyChanged);
   }
 
   addMoney(value: number) {
@@ -30,10 +30,10 @@ export class Player extends Base {
 
   setHitpoints(value: number) {
     this.hitpoints = Math.max(0, value);
-    this.triggerEvent(events.healthChanged, this);
+    this.triggerEvent(events.healthChanged);
 
     if (this.hitpoints === 0) {
-      this.triggerEvent(events.playerDefeated, this);
+      this.triggerEvent(events.playerDefeated);
     }
   }
 

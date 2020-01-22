@@ -60,3 +60,9 @@ export interface IView {
   add(go: any): void;
   remove(go: any): void;
 }
+
+export interface ProgressEventData {
+  name: string;
+  progress: number;
+  total: number;
+}

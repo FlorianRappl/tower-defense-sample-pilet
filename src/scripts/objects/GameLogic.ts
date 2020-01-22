@@ -36,17 +36,17 @@ export class GameLogic extends Base {
     view.mazeSize = this.getMazeSize();
     this.view = view;
 
-    this.player.addEventListener(events.playerDefeated, e => {
-      this.triggerEvent(events.playerDefeated, e);
+    this.player.addEventListener(events.playerDefeated, () => {
+      this.triggerEvent(events.playerDefeated);
       this.finish();
     });
 
-    this.player.addEventListener(events.moneyChanged, e => {
-      this.triggerEvent(events.moneyChanged, e);
+    this.player.addEventListener(events.moneyChanged, () => {
+      this.triggerEvent(events.moneyChanged);
     });
 
-    this.player.addEventListener(events.healthChanged, e => {
-      this.triggerEvent(events.healthChanged, e);
+    this.player.addEventListener(events.healthChanged, () => {
+      this.triggerEvent(events.healthChanged);
     });
 
     this.registerEvent(events.refreshed);
@@ -66,10 +66,7 @@ export class GameLogic extends Base {
     if (this.state === GameState.unstarted) {
       this.player.setHitpoints(constants.hitpoints);
       this.player.setMoney(constants.money);
-      this.triggerEvent(events.towerNumberChanged, {
-        current: this.getNumShooting(),
-        maximum: this.maxTowerNumber,
-      });
+      this.triggerEvent(events.towerNumberChanged);
       this.state = GameState.building;
     }
 
@@ -107,9 +104,9 @@ export class GameLogic extends Base {
       money: this.player.money,
       points: this.player.points,
       playerName: this.player.name,
-      towers: towers,
       wave: this.waves.index,
       state: this.state,
+      towers,
     };
   }
 
@@ -257,8 +254,8 @@ export class GameLogic extends Base {
       wave.addEventListener(events.unitSpawned, e => {
         this.triggerEvent(events.unitSpawned, e);
       });
-      this.triggerEvent(events.waveCreated, wave);
       this.currentWave = wave;
+      this.triggerEvent(events.waveCreated);
     }
   }
 
@@ -280,10 +277,7 @@ export class GameLogic extends Base {
         this.addTower(newTower);
 
         if (!isrock) {
-          this.triggerEvent(events.towerNumberChanged, {
-            current: numShooting + 1,
-            maximum: this.maxTowerNumber,
-          });
+          this.triggerEvent(events.towerNumberChanged);
         }
 
         return true;
@@ -304,10 +298,7 @@ export class GameLogic extends Base {
         this.maze.tryRemove(pt);
 
         if (towerToRemove.typeName !== 'Rock') {
-          this.triggerEvent(events.towerNumberChanged, {
-            current: this.getNumShooting(),
-            maximum: this.maxTowerNumber,
-          });
+          this.triggerEvent(events.towerNumberChanged);
         }
       }
     }
@@ -341,21 +332,18 @@ export class GameLogic extends Base {
 
   setMediPackCost(cost: number) {
     this.mediPackCost = cost;
-    this.triggerEvent(events.mediPackCostChanged, cost);
+    this.triggerEvent(events.mediPackCostChanged);
   }
 
   setTowerBuildCost(cost: number) {
     this.towerBuildCost = cost;
-    this.triggerEvent(events.towerBuildCostChanged, cost);
+    this.triggerEvent(events.towerBuildCostChanged);
   }
 
   setMaxTowerNumber(value: number) {
     const numShooting = this.getNumShooting();
     this.maxTowerNumber = value;
 
-    this.triggerEvent(events.towerNumberChanged, {
-      current: numShooting,
-      maximum: value,
-    });
+    this.triggerEvent(events.towerNumberChanged);
   }
 }

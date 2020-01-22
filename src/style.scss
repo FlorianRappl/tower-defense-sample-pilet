@@ -1,4 +1,23 @@
+.tower-defense-tile {
+  flex: 1;
+	background: #000 url('./assets/images/background.jpg') repeat;
+  font-size: 1.55em;
+  font-weight: bold;
+  padding: 1.3em 0.8em;
+  text-align: center;
+  color: gold;
+  text-transform: uppercase;
+
+  &:hover {
+    text-decoration: none;
+    color: gold;
+  }
+}
+
 .tower-defense-page {
+  position: relative;
+  flex: 1;
+
   button {
     font: 16px Arial;
     font-weight: bold;
@@ -35,6 +54,7 @@
     padding: 8px;
     border: 1px solid #ccc;
     box-shadow: 0 0 20px #def;
+    box-sizing: content-box;
   }
 
   #wait {
@@ -103,8 +123,6 @@
 
   #info > div {
     position: absolute;
-    height: 19px;
-    padding-top: 5px;
     top: 0;
   }
 
@@ -202,6 +220,7 @@
     padding-top: 5px;
     height: 20px;
     text-align: center;
+    box-sizing: content-box;
   }
 
   #towers > button > .info {
