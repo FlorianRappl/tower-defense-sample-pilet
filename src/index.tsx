@@ -1,16 +1,16 @@
 import './style.scss';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { PiletApi } from 'sample-piral';
+import type { PiletApi } from 'sample-piral';
 
 const TowerDefense = React.lazy(() => import('./TowerDefense'));
 
 export function setup(app: PiletApi) {
   const path = '/tower-defense';
 
-  app.registerMenu(() => <Link to={path}>Tower Defense</Link>);
+  app.registerMenu?.(() => <Link to={path}>Tower Defense</Link>);
 
-  app.registerTile(
+  app.registerTile?.(
     () => (
       <Link to={path} className="tower-defense-tile">
         Tower Defense
@@ -22,5 +22,5 @@ export function setup(app: PiletApi) {
     },
   );
 
-  app.registerPage(path, TowerDefense);
+  app.registerPage?.(path, TowerDefense);
 }
